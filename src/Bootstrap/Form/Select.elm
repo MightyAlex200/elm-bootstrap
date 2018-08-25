@@ -137,15 +137,15 @@ large =
 {-| Options/shorthand for setting the id of a select
 -}
 id : String -> Option msg
-id id =
-    Id id
+id input =
+    Id input
 
 
 {-| Use this function to handle any Html.Attribute option you wish for your select
 -}
 attrs : List (Html.Attribute msg) -> Option msg
-attrs attrs =
-    Attrs attrs
+attrs attributes =
+    Attrs attributes
 
 
 {-| Shorthand for assigning an onChange handler for a select
@@ -177,8 +177,8 @@ customEventOnChange tagger =
 {-| Shorthand for setting the disabled attribute of a select
 -}
 disabled : Bool -> Option msg
-disabled disabled =
-    Disabled disabled
+disabled input =
+    Disabled input
 
 
 toAttributes : List (Option msg) -> List (Html.Attribute msg)
@@ -221,8 +221,8 @@ applyModifier modifier options =
         Size size ->
             { options | size = Just size }
 
-        Id id ->
-            { options | id = Just id }
+        Id input ->
+            { options | id = Just input }
 
         Custom ->
             { options | custom = True }
@@ -230,14 +230,14 @@ applyModifier modifier options =
         Disabled val ->
             { options | disabled = val }
 
-        OnChange onChange ->
-            { options | onChange = Just onChange }
+        OnChange input ->
+            { options | onChange = Just input }
 
         Validation validation ->
             { options | validation = Just validation }
 
-        Attrs attrs ->
-            { options | attributes = options.attributes ++ attrs }
+        Attrs attributes ->
+            { options | attributes = options.attributes ++ attributes }
 
 
 sizeAttribute : Bool -> ScreenSize -> Maybe (Html.Attribute msg)

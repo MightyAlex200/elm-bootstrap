@@ -2,7 +2,7 @@ module Bootstrap.Pagination.Internal exposing (..)
 
 import Html
 import Html.Attributes exposing (class, href, tabindex)
-import Html.Events exposing (onWithOptions)
+import Html.Events exposing (custom)
 import Json.Decode as Decode
 
 
@@ -65,11 +65,10 @@ linkAttributes (ItemConfig itemConfig) { attrs } =
         ++ attrs
         ++ if itemConfig.status == Disabled then
             [ tabindex -1
-            , onWithOptions
+            -- As of 0.19, event attributes can no longer preventDefault nor
+            -- stopPropagation while also failing, AFAIK
+            , custom
                 "click"
-                { preventDefault = True
-                , stopPropagation = True
-                }
                 (Decode.fail "ignore")
             ]
            else

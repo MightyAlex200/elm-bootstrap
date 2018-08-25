@@ -141,7 +141,7 @@ import Bootstrap.Button as Button
 import Bootstrap.Internal.Button as ButtonInternal
 import Html
 import Html.Attributes exposing (class, classList, type_, id, href, style)
-import Html.Events exposing (onClick, on, onWithOptions)
+import Html.Events exposing (onClick, on)
 import Mouse
 import AnimationFrame
 import Json.Decode as Json
@@ -270,15 +270,15 @@ dropLeft =
 {-| Use this function when you need the customize the Dropdown root div with additional Html.Attribute (s).
 -}
 attrs : List (Html.Attribute msg) -> DropdownOption msg
-attrs attrs =
-    Attrs attrs
+attrs attributes =
+    Attrs attributes
 
 
 {-| Use this function when you need the customize the Dropdown menu with additional Html.Attribute (s).
 -}
 menuAttrs : List (Html.Attribute msg) -> DropdownOption msg
-menuAttrs attrs =
-    MenuAttrs attrs
+menuAttrs attributes =
+    MenuAttrs attributes
 
 
 {-| Creates a Dropdown button. You can think of this as the view function.
@@ -367,36 +367,35 @@ dropdownMenu (State {status, menuSize} as state) config items =
     let
         wrapperStyle =
             if status == Closed then
-                [ ( "height", "0" )
-                , ( "overflow", "hidden" )
-                , ( "position", "relative" )
+                [ style "height" "0"
+                , style "overflow" "hidden"
+                , style "position" "relative"
                 ]
             else
-                [ ( "position", "relative" ) ]
+                [ style "position" "relative" ]
     in
         Html.div
-            [ style wrapperStyle ]
+            wrapperStyle
             [ Html.div
                 ([ classList
                     [ ( "dropdown-menu", True )
                     , ( "dropdown-menu-right", config.hasMenuRight )
                     , ( "show", True )
                     ]
-                 , menuStyle state config
-                 ]
-                    ++ config.menuAttrs
+                 ] ++ (menuStyle state config)
+                   ++ config.menuAttrs
                 )
                 (List.map (\(DropdownItem x) -> x) items)
             ]
 
 
-menuStyle : State -> Options msg -> Html.Attribute msg
+menuStyle : State -> Options msg -> List (Html.Attribute msg)
 menuStyle (State {status, toggleSize, menuSize}) config =
     let
         default
-            = [ ( "top", "0" ), ( "left", "0" ) ]
+            = [ style "top" "0", style "left" "0" ]
         px n =
-            toString n ++ "px"
+            String.fromFloat n ++ "px"
 
         translate x y z =
             "translate3d("
@@ -404,19 +403,18 @@ menuStyle (State {status, toggleSize, menuSize}) config =
                 ++ px y ++ ","
                 ++ px z ++ ")"
     in
-        style <|
-         case (config.isDropUp, config.dropDirection) of
+        case (config.isDropUp, config.dropDirection) of
             (True, _) ->
-                default ++ [("transform", translate -toggleSize.width -menuSize.height 0)]
+                default ++ [ style "transform" (translate -toggleSize.width -menuSize.height 0) ]
 
             (_, Just Dropright) ->
                 default
 
             (_, Just Dropleft) ->
-                default ++ [("transform", translate (-toggleSize.width - menuSize.width) 0 0)]
+                default ++ [ style "transform" (translate (-toggleSize.width - menuSize.width) 0 0) ]
 
             _ ->
-                default ++ [("transform", translate -toggleSize.width toggleSize.height 0)]
+                default ++ [ style "transform" (translate -toggleSize.width toggleSize.height 0) ]
 
 
 
@@ -556,14 +554,14 @@ applyModifier option options =
         Dropup ->
             { options | isDropUp = True }
 
-        Attrs attrs ->
-            { options | attributes = attrs }
+        Attrs attributes ->
+            { options | attributes = attributes }
 
         DropToDir dir ->
             { options | dropDirection = Just dir }
 
-        MenuAttrs attrs ->
-            { options | menuAttrs = attrs }
+        MenuAttrs attributes ->
+            { options | menuAttrs = attributes }
 
 
 {-| Creates an `a` element appropriate for use in dropdowns
@@ -674,7 +672,7 @@ clickHandler toMsg (State {status} as state) =
 
 sizeDecoder : Json.Decoder (DOM.Rectangle, DOM.Rectangle)
 sizeDecoder =
-    Json.map2 (,)
+    Json.map2 Tuple.pair
         (toggler [ "target" ] DOM.boundingClientRect)
         (toggler [ "target" ]
             (DOM.nextSibling <|

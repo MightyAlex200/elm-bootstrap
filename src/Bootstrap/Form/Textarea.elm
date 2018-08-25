@@ -83,36 +83,36 @@ textarea =
 {-| Options/shorthand for setting the id of a textarea
 -}
 id : String -> Option msg
-id id =
-    Id id
+id i =
+    Id i
 
 
 {-| Option/shorthand to set the rows attribute of a textarea
 -}
 rows : Int -> Option msg
-rows rows =
-    Rows rows
+rows r =
+    Rows r
 
 
 {-| Use this function to handle any Html.Attribute option you wish for your textarea
 -}
 attrs : List (Html.Attribute msg) -> Option msg
-attrs attrs =
-    Attrs attrs
+attrs attributes =
+    Attrs attributes
 
 
 {-| Shorthand for setting the value attribute of a textarea
 -}
 value : String -> Option msg
-value value =
-    Value value
+value val =
+    Value val
 
 
 {-| Shorthand for setting the defaultValue attribute of a textarea
 -}
 defaultValue : String -> Option msg
-defaultValue value =
-    DefaultValue value
+defaultValue val =
+    DefaultValue val
 
 
 {-| Shorthand for assigning an onInput handler for a textarea
@@ -167,7 +167,7 @@ toAttributes modifiers =
             ++ ([ Maybe.map Attributes.id options.id
                 , Maybe.map Attributes.rows options.rows
                 , Maybe.map Attributes.value options.value
-                , Maybe.map Attributes.defaultValue options.defaultValue
+                , Maybe.map Attributes.value options.defaultValue
                 , Maybe.map Events.onInput options.onInput
                 , Maybe.map validationAttribute options.validation
                 ]
@@ -192,29 +192,29 @@ defaultOptions =
 applyModifier : Option msg -> Options msg -> Options msg
 applyModifier modifier options =
     case modifier of
-        Id id ->
-            { options | id = Just id }
+        Id idMod ->
+            { options | id = Just idMod }
 
-        Rows rows ->
-            { options | rows = Just rows }
+        Rows rowsMod ->
+            { options | rows = Just rowsMod }
 
         Disabled ->
             { options | disabled = True }
 
-        Value value ->
-            { options | value = Just value }
+        Value valueMod ->
+            { options | value = Just valueMod }
 
-        DefaultValue value ->
-            { options | defaultValue = Just value }
+        DefaultValue valueMod ->
+            { options | defaultValue = Just valueMod }
 
-        OnInput onInput ->
-            { options | onInput = Just onInput }
+        OnInput onInputMod ->
+            { options | onInput = Just onInputMod }
 
         Validation validation ->
             { options | validation = Just validation }
 
-        Attrs attrs ->
-            { options | attributes = options.attributes ++ attrs }
+        Attrs attrsMod ->
+            { options | attributes = options.attributes ++ attrsMod }
 
 
 validationAttribute : FormInternal.Validation -> Html.Attribute msg

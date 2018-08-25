@@ -148,6 +148,7 @@ import Bootstrap.General.Internal exposing (hAlignClass)
 import Html
 import Html.Attributes exposing (class, attribute)
 import Html.Events exposing (onClick)
+import Flip exposing (flip)
 
 
 {-| Opaque type holding the configuration options for a pagination widget.
@@ -302,7 +303,7 @@ itemsList : ListConfig a msg -> Config msg -> Config msg
 itemsList conf config =
     let
         byIdx idx =
-            List.indexedMap (,) conf.data
+            List.indexedMap Tuple.pair conf.data
                 |> List.filter (\( i, item ) -> i == idx)
                 |> List.map Tuple.second
                 |> List.head
@@ -413,8 +414,8 @@ listAttributes config =
     [ class "pagination" ]
         ++ sizeClass config.size
         ++ (case config.hAlign of
-                Just align ->
-                    [ hAlignClass align ]
+                Just a ->
+                    [ hAlignClass a ]
 
                 Nothing ->
                     []
@@ -423,8 +424,8 @@ listAttributes config =
 
 
 sizeClass : Size -> List (Html.Attribute msg)
-sizeClass size =
-    case size of
+sizeClass s =
+    case s of
         Large ->
             [ class "pagination-lg" ]
 

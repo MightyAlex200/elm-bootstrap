@@ -108,7 +108,7 @@ module Bootstrap.Accordion
 
 import Html
 import Html.Attributes exposing (class, href, style)
-import Html.Events exposing (onClick, on, onWithOptions, Options)
+import Html.Events exposing (onClick, on, preventDefaultOn)
 import Json.Decode as Json
 import DOM
 import Dict exposing (Dict)
@@ -265,18 +265,18 @@ config toMsg =
 when using this option.
 -}
 withAnimation : Config msg -> Config msg
-withAnimation (Config config) =
+withAnimation (Config conf) =
     Config
-        { config | withAnimation = True }
+        { conf | withAnimation = True }
 
 
 
 {-| Set option for only allowing one (or zero) open cards at any one time.
 -}
 onlyOneOpen : Config msg -> Config msg
-onlyOneOpen (Config config) =
+onlyOneOpen (Config conf) =
     Config
-        { config | onlyOneOpen = True }
+        { conf | onlyOneOpen = True }
 
 
 {-| Check if given card is open/expanded (or when animating, on it's way to become open/expanded).
@@ -312,18 +312,18 @@ view :
     State
     -> Config msg
     -> Html.Html msg
-view state ((Config { cards }) as config) =
+view state (Config conf as c) =
     Html.div
         []
-        (List.map (renderCard state config) cards)
+        (List.map (renderCard state c) conf.cards)
 
 
 {-| Define the cards that your accordion should consist of
 -}
 cards : List (Card msg) -> Config msg -> Config msg
-cards cards (Config config) =
+cards c (Config conf) =
     Config
-        { config | cards = cards }
+        { conf | cards = c }
 
 
 {-| Creates a card item for use in an accordion
@@ -341,12 +341,12 @@ card :
     , header : Header msg
     }
     -> Card msg
-card { id, options, header, blocks } =
+card c =
     Card
-        { id = id
-        , options = options
-        , header = header
-        , blocks = blocks
+        { id = c.id
+        , options = c.options
+        , header = c.header
+        , blocks = c.blocks
         }
 
 
@@ -422,15 +422,15 @@ headerH6 =
 {-| Add elements before the toggle element in a accordion card header
 -}
 prependHeader : List (Html.Html msg) -> Header msg -> Header msg
-prependHeader elements (Header header) =
-    Header { header | childrenPreToggle = elements ++ header.childrenPreToggle }
+prependHeader elements (Header head) =
+    Header { head | childrenPreToggle = elements ++ head.childrenPreToggle }
 
 
 {-| Add elements after the toggle element in a accordion card header
 -}
 appendHeader : List (Html.Html msg) -> Header msg -> Header msg
-appendHeader elements (Header header) =
-    Header { header | childrenPostToggle = header.childrenPostToggle ++ elements }
+appendHeader elements (Header head) =
+    Header { head | childrenPostToggle = head.childrenPostToggle ++ elements }
 
 
 headerPrivate :
@@ -438,11 +438,11 @@ headerPrivate :
     -> List (Html.Attribute msg)
     -> Toggle msg
     -> Header msg
-headerPrivate elemFn attributes toggle =
+headerPrivate elemFn attributes toggleInput =
     Header
         { elemFn = elemFn
         , attributes = attributes
-        , toggle = toggle
+        , toggle = toggleInput
         , childrenPreToggle = []
         , childrenPostToggle = []
         }
@@ -488,11 +488,11 @@ renderCard :
     -> Config msg
     -> Card msg
     -> Html.Html msg
-renderCard state config ((Card { options }) as card) =
+renderCard state conf ((Card { options }) as c) =
     Html.div
         (CardInternal.cardAttributes options ++ [ class "card" ])
-        [ renderCardHeader state config card
-        , renderCardBlock state config card
+        [ renderCardHeader state conf c
+        , renderCardBlock state conf c
         ]
 
 
@@ -501,15 +501,15 @@ renderCardHeader :
     -> Config msg
     -> Card msg
     -> Html.Html msg
-renderCardHeader state config ((Card { header }) as card) =
+renderCardHeader state conf (Card c as ca) =
     let
-        (Header { elemFn, attributes, toggle, childrenPreToggle, childrenPostToggle }) =
-            header
+        (Header { elemFn, attributes, childrenPreToggle, childrenPostToggle }) =
+            c.header
     in
         elemFn
             (attributes ++ [ class "card-header" ])
             (childrenPreToggle
-                ++ [ renderToggle state config card ]
+                ++ [ renderToggle state conf ca ]
                 ++ childrenPostToggle
             )
 
@@ -519,23 +519,23 @@ renderToggle :
     -> Config msg
     -> Card msg
     -> Html.Html msg
-renderToggle state config ((Card { id, header }) as card) =
+renderToggle state conf (Card c as ca) =
     let
-        (Header { toggle }) =
-            header
+        (Header h) =
+            c.header
 
         (Toggle { attributes, children }) =
-            toggle
+            h.toggle
     in
         Html.a
-            ([ href <| "#" ++ id
-             , onWithOptions
+            ([ href <| "#" ++ c.id
+             , preventDefaultOn
                 "click"
-                { stopPropagation = False
-                , preventDefault = True
-                }
                <|
-                clickHandler state config heightDecoder card
+                Json.map
+                 (\msg -> ( msg, True ))
+                 <|
+                  clickHandler state conf heightDecoder ca
              ]
                 ++ attributes
             )
@@ -548,7 +548,7 @@ clickHandler :
     -> Json.Decoder Float
     -> Card msg
     -> Json.Decoder msg
-clickHandler ((State cardStates) as state) (Config { toMsg, withAnimation, onlyOneOpen }) decoder (Card { id }) =
+clickHandler ((State cardStates) as state) (Config conf) decoder (Card { id }) =
     let
         currentCardState =
             Dict.get id cardStates
@@ -565,12 +565,12 @@ clickHandler ((State cardStates) as state) (Config { toMsg, withAnimation, onlyO
                 (\i c ->
                     if i == id then
                         { height = Just h
-                        , visibility = visibilityTransition withAnimation c.visibility
+                        , visibility = visibilityTransition conf.withAnimation c.visibility
                         }
-                    else if c.visibility == Shown && withAnimation == True && onlyOneOpen == True then
+                    else if c.visibility == Shown && conf.withAnimation == True && conf.onlyOneOpen == True then
                         { c | visibility = StartUp }
 
-                    else if c.visibility == Shown && withAnimation == False && onlyOneOpen == True then
+                    else if c.visibility == Shown && conf.withAnimation == False && conf.onlyOneOpen == True then
                         { c | visibility = Hidden }
 
                     else
@@ -584,14 +584,14 @@ clickHandler ((State cardStates) as state) (Config { toMsg, withAnimation, onlyO
             |> Json.andThen
                 (\v ->
                     Json.succeed <|
-                        toMsg <|
+                        conf.toMsg <|
                             updOthersHidden v
                 )
 
 
 visibilityTransition : Bool -> Visibility -> Visibility
-visibilityTransition withAnimation visibility =
-    case ( withAnimation, visibility ) of
+visibilityTransition withAnim visibility =
+    case ( withAnim, visibility ) of
         ( True, Hidden ) ->
             StartDown
 
@@ -628,9 +628,9 @@ renderCardBlock :
     -> Config msg
     -> Card msg
     -> Html.Html msg
-renderCardBlock state config ((Card { id, blocks }) as card) =
+renderCardBlock state conf ((Card { id, blocks }) as c) =
     Html.div
-        ([ Html.Attributes.id id ] ++ animationAttributes state config card)
+        ([ Html.Attributes.id id ] ++ animationAttributes state conf c)
         [ Html.div [] (CardInternal.renderBlocks blocks) ]
 
 
@@ -639,60 +639,59 @@ animationAttributes :
     -> Config msg
     -> Card msg
     -> List (Html.Attribute msg)
-animationAttributes state (Config {withAnimation}) ((Card { id }) as card) =
+animationAttributes state (Config conf) (Card { id }) =
     let
         cardState =
             getOrInitCardState id state
 
         pixelHeight =
-            Maybe.map (\v -> (toString v) ++ "px") cardState.height
+            Maybe.map (\v -> (String.fromFloat v) ++ "px") cardState.height
                 |> Maybe.withDefault "0"
 
-        styles = transitionStyle withAnimation
+        styles = transitionStyle conf.withAnimation
     in
         case cardState.visibility of
             Hidden ->
-                [ styles "0px" ]
+                styles "0px"
 
             StartDown ->
-                [ styles "0px" ]
+                styles "0px"
 
             StartUp ->
-                [ styles pixelHeight ]
+                styles pixelHeight
 
             Shown ->
                 case cardState.height of
                     Just x ->
-                        [ styles pixelHeight ]
+                        styles pixelHeight
 
                     Nothing ->
-                        [ styles "100%" ]
+                        styles "100%"
 
 
 
 
 
-transitionStyle : Bool -> String -> Html.Attribute msg
-transitionStyle withAnimation height =
-    style
-        ([ ( "position", "relative" )
-         , ( "height", height )
-         , ( "overflow", "hidden" )
-         ]
-            ++ if withAnimation == True then
-                [ ( "-webkit-transition-timing-function", "ease" )
-                , ( "-o-transition-timing-function", "ease" )
-                , ( "transition-timing-function", "ease" )
-                , ( "-webkit-transition-duration", "0.35s" )
-                , ( "-o-transition-duration", "0.35s" )
-                , ( "transition-duration", "0.35s" )
-                , ( "-webkit-transition-property", "height" )
-                , ( "-o-transition-property", "height" )
-                , ( "transition-property", "height" )
-                ]
-               else
-                []
-        )
+transitionStyle : Bool -> String -> List (Html.Attribute msg)
+transitionStyle withAnim height =
+    ([ style "position" "relative"
+     , style "height" height
+     , style "overflow" "hidden"
+     ]
+        ++ if withAnim == True then
+            [ style "-webkit-transition-timing-function" "ease"
+            , style "-o-transition-timing-function" "ease"
+            , style "transition-timing-function" "ease"
+            , style "-webkit-transition-duration" "0.35s"
+            , style "-o-transition-duration" "0.35s"
+            , style "transition-duration" "0.35s"
+            , style "-webkit-transition-property" "height"
+            , style "-o-transition-property" "height"
+            , style "transition-property" "height"
+            ]
+           else
+            []
+    )
 
 
 getOrInitCardState : String -> State -> CardState

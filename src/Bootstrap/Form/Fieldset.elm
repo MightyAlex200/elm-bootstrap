@@ -24,6 +24,7 @@ Fieldset comes with the added benefit of disabling all child controls when we se
 
 import Html
 import Html.Attributes as Attributes exposing (classList)
+import Flip exposing (flip)
 
 
 {-| Opaque representation of the view configuration for a fieldset.
@@ -78,8 +79,8 @@ disabled isDisabled =
 {-| When you need to customize a fieldset with standard Html.Attribute attributes use this function
 -}
 attrs : List (Html.Attribute msg) -> Config msg -> Config msg
-attrs attrs =
-    mapOptions (\opts -> { opts | attributes = opts.attributes ++ attrs })
+attrs attributes =
+    mapOptions (\opts -> { opts | attributes = opts.attributes ++ attributes })
 
 
 {-| Provide a legend for a set of fields
@@ -89,10 +90,10 @@ legend :
     -> List (Html.Html msg)
     -> Config msg
     -> Config msg
-legend attributes children =
+legend attributes childrenInput =
     mapConfig
         (\conf ->
-            { conf | legend = Just <| Html.legend attributes children }
+            { conf | legend = Just <| Html.legend attributes childrenInput }
         )
 
 
@@ -101,8 +102,8 @@ children :
     List (Html.Html msg)
     -> Config msg
     -> Config msg
-children children =
-    mapConfig (\conf -> { conf | children = children })
+children childrenInput =
+    mapConfig (\conf -> { conf | children = childrenInput })
 
 
 {-| View a fieldset standalone. To create a fieldset you start off with a basic configuration which you can compose
@@ -121,16 +122,16 @@ of several optional elements.
         |> Fieldset.view
 -}
 view : Config msg -> Html.Html msg
-view (Config { options, legend, children }) =
+view (Config conf) =
     Html.fieldset
-        ([ classList [ ( "form-group", options.isGroup ) ]
-         , Attributes.disabled options.disabled
+        ([ classList [ ( "form-group", conf.options.isGroup ) ]
+         , Attributes.disabled conf.options.disabled
          ]
-            ++ options.attributes
+            ++ conf.options.attributes
         )
-        (Maybe.map (\e -> [ e ]) legend
+        (Maybe.map (\e -> [ e ]) conf.legend
             |> Maybe.withDefault []
-            |> (flip List.append) children
+            |> (flip List.append) conf.children
         )
 
 
@@ -146,5 +147,5 @@ mapOptions :
     (Options msg -> Options msg)
     -> Config msg
     -> Config msg
-mapOptions mapper (Config ({ options } as config)) =
-    { config | options = mapper options } |> Config
+mapOptions mapper (Config ({ options } as conf)) =
+    { conf | options = mapper options } |> Config

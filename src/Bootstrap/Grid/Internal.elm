@@ -285,11 +285,11 @@ colAttributes modifiers =
                 , options.alignLg
                 , options.alignXl
                 ]
-            ++ case options.textAlign of
+            ++ (case options.textAlign of
                 Just a ->
                     [TextInternal.textAlignClass a]
                 Nothing ->
-                    []
+                    [])
             ++ options.attributes
 
 
@@ -323,121 +323,121 @@ applyColOption modifier options =
         ColAttrs attrs ->
             { options | attributes = options.attributes ++ attrs }
 
-        ColWidth width ->
-            applyColWidth width options
+        ColWidth widthMod ->
+            applyColWidth widthMod options
 
-        ColOffset offset ->
-            applyColOffset offset options
+        ColOffset offsetMod ->
+            applyColOffset offsetMod options
 
-        ColPull pull ->
-            applyColPull pull options
+        ColPull pullMod ->
+            applyColPull pullMod options
 
-        ColPush push ->
-            applyColPush push options
+        ColPush pushMod ->
+            applyColPush pushMod options
 
-        ColOrder order ->
-            applyColOrder order options
+        ColOrder orderMod ->
+            applyColOrder orderMod options
 
-        ColAlign align ->
-            applyColAlign align options
+        ColAlign alignMod ->
+            applyColAlign alignMod options
 
-        TextAlign align ->
-            { options | textAlign = Just align }
+        TextAlign alignMod ->
+            { options | textAlign = Just alignMod }
 
 
 applyColWidth : Width -> ColOptions msg -> ColOptions msg
-applyColWidth width options =
-    case width.screenSize of
+applyColWidth widthInput options =
+    case widthInput.screenSize of
         XS ->
-            { options | widthXs = Just width }
+            { options | widthXs = Just widthInput }
 
         SM ->
-            { options | widthSm = Just width }
+            { options | widthSm = Just widthInput }
 
         MD ->
-            { options | widthMd = Just width }
+            { options | widthMd = Just widthInput }
 
         LG ->
-            { options | widthLg = Just width }
+            { options | widthLg = Just widthInput }
 
         XL ->
-            { options | widthXl = Just width }
+            { options | widthXl = Just widthInput }
 
 
 applyColOffset : Offset -> ColOptions msg -> ColOptions msg
-applyColOffset offset options =
-    case offset.screenSize of
+applyColOffset offsetInput options =
+    case offsetInput.screenSize of
         XS ->
-            { options | offsetXs = Just offset }
+            { options | offsetXs = Just offsetInput }
 
         SM ->
-            { options | offsetSm = Just offset }
+            { options | offsetSm = Just offsetInput }
 
         MD ->
-            { options | offsetMd = Just offset }
+            { options | offsetMd = Just offsetInput }
 
         LG ->
-            { options | offsetLg = Just offset }
+            { options | offsetLg = Just offsetInput }
 
         XL ->
-            { options | offsetXl = Just offset }
+            { options | offsetXl = Just offsetInput }
 
 
 applyColPull : Pull -> ColOptions msg -> ColOptions msg
-applyColPull pull options =
-    case pull.screenSize of
+applyColPull pullInput options =
+    case pullInput.screenSize of
         XS ->
-            { options | pullXs = Just pull }
+            { options | pullXs = Just pullInput }
 
         SM ->
-            { options | pullSm = Just pull }
+            { options | pullSm = Just pullInput }
 
         MD ->
-            { options | pullMd = Just pull }
+            { options | pullMd = Just pullInput }
 
         LG ->
-            { options | pullLg = Just pull }
+            { options | pullLg = Just pullInput }
 
         XL ->
-            { options | pullXl = Just pull }
+            { options | pullXl = Just pullInput }
 
 
 applyColPush : Push -> ColOptions msg -> ColOptions msg
-applyColPush push options =
-    case push.screenSize of
+applyColPush pushInput options =
+    case pushInput.screenSize of
         XS ->
-            { options | pushXs = Just push }
+            { options | pushXs = Just pushInput }
 
         SM ->
-            { options | pushSm = Just push }
+            { options | pushSm = Just pushInput }
 
         MD ->
-            { options | pushMd = Just push }
+            { options | pushMd = Just pushInput }
 
         LG ->
-            { options | pushLg = Just push }
+            { options | pushLg = Just pushInput }
 
         XL ->
-            { options | pushXl = Just push }
+            { options | pushXl = Just pushInput }
 
 
 applyColOrder : Order -> ColOptions msg -> ColOptions msg
-applyColOrder order options =
-    case order.screenSize of
+applyColOrder orderInput options =
+    case orderInput.screenSize of
         XS ->
-            { options | orderXs = Just order }
+            { options | orderXs = Just orderInput }
 
         SM ->
-            { options | orderSm = Just order }
+            { options | orderSm = Just orderInput }
 
         MD ->
-            { options | orderMd = Just order }
+            { options | orderMd = Just orderInput }
 
         LG ->
-            { options | orderLg = Just order }
+            { options | orderLg = Just orderInput }
 
         XL ->
-            { options | orderXl = Just order }
+            { options | orderXl = Just orderInput }
 
 
 applyColAlign : VAlign -> ColOptions msg -> ColOptions msg
@@ -566,10 +566,10 @@ defaultRowOptions =
 colWidthsToAttributes : List (Maybe Width) -> List (Html.Attribute msg)
 colWidthsToAttributes widths =
     let
-        width w =
+        widthVar w =
             Maybe.map colWidthClass w
     in
-        List.map width widths
+        List.map widthVar widths
             |> List.filterMap identity
 
 
@@ -588,10 +588,10 @@ colWidthClass { screenSize, columnCount } =
 offsetsToAttributes : List (Maybe Offset) -> List (Html.Attribute msg)
 offsetsToAttributes offsets =
     let
-        offset m =
+        offsetVar m =
             Maybe.map offsetClass m
     in
-        List.map offset offsets
+        List.map offsetVar offsets
             |> List.filterMap identity
 
 
@@ -603,7 +603,7 @@ offsetClass { screenSize, offsetCount } =
 pullsToAttributes : List (Maybe Pull) -> List (Html.Attribute msg)
 pullsToAttributes pulls =
     let
-        pull m =
+        pullVar m =
             case m of
                 Just { screenSize, moveCount } ->
                     Just <| class <| "pull" ++ screenSizeToPartialString screenSize ++ moveCountOption moveCount
@@ -611,14 +611,14 @@ pullsToAttributes pulls =
                 Nothing ->
                     Nothing
     in
-        List.map pull pulls
+        List.map pullVar pulls
             |> List.filterMap identity
 
 
 pushesToAttributes : List (Maybe Pull) -> List (Html.Attribute msg)
 pushesToAttributes pushes =
     let
-        push m =
+        pushVar m =
             case m of
                 Just { screenSize, moveCount } ->
                     Just <| class <| "push" ++ screenSizeToPartialString screenSize ++ moveCountOption moveCount
@@ -626,14 +626,14 @@ pushesToAttributes pushes =
                 Nothing ->
                     Nothing
     in
-        List.map push pushes
+        List.map pushVar pushes
             |> List.filterMap identity
 
 
 orderToAttributes : List (Maybe Order) -> List (Html.Attribute msg)
 orderToAttributes orders =
     let
-        order m =
+        orderVar m =
             case m of
                 Just { screenSize, moveCount } ->
                     Just <| class <| "order" ++ screenSizeToPartialString screenSize ++ orderColOption moveCount
@@ -641,7 +641,7 @@ orderToAttributes orders =
                 Nothing ->
                     Nothing
     in
-        List.map order orders
+        List.map orderVar orders
             |> List.filterMap identity
 
 

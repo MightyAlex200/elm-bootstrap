@@ -114,7 +114,7 @@ keyedRow : List (Row.Option msg) -> List ( String, Column msg ) -> Html msg
 keyedRow options keyedCols =
     Keyed.node "div"
         (GridInternal.rowAttributes options)
-        (List.map (\( key, col ) -> ( key, renderCol col )) keyedCols)
+        (List.map (\( key, colVar ) -> ( key, renderCol colVar )) keyedCols)
 
 
 {-| Create a column

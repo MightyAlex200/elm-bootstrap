@@ -96,7 +96,7 @@ module Bootstrap.Tab
 import AnimationFrame as AnimationFrame
 import Html
 import Html.Attributes as Attributes exposing (class, classList, href, style)
-import Html.Events exposing (onWithOptions, on)
+import Html.Events exposing (preventDefaultOn, on)
 import Json.Decode as Json
 
 
@@ -246,9 +246,9 @@ config toMsg =
 {-| Define the tab items for a Tab.
 -}
 items : List (Item msg) -> Config msg -> Config msg
-items items (Config config) =
+items i (Config conf) =
     Config
-        { config | items = items }
+        { conf | items = i }
 
 
 {-| Space out tab menu items evenly accross the the whole tabs control width
@@ -280,33 +280,33 @@ right =
 
 
 layout : TabLayout -> Config msg -> Config msg
-layout layout (Config config) =
+layout l (Config conf) =
     Config
-        { config | layout = Just layout }
+        { conf | layout = Just l }
 
 
 {-| Option to make the tab menu items display with a pilled/buttonish look
 -}
 pills : Config msg -> Config msg
-pills (Config config) =
+pills (Config conf) =
     Config
-        { config | isPill = True }
+        { conf | isPill = True }
 
 
 {-| Option to add a fade in/out animation effect when switching tabs
 -}
 withAnimation : Config msg -> Config msg
-withAnimation (Config config) =
+withAnimation (Config conf) =
     Config
-        { config | withAnimation = True }
+        { conf | withAnimation = True }
 
 
 {-| Use this function when you need additional customization with Html.Attribute attributes for the tabs control
 -}
 attrs : List (Html.Attribute msg) -> Config msg -> Config msg
-attrs attrs (Config config) =
+attrs attributes (Config conf) =
     Config
-        { config | attributes = config.attributes ++ attrs }
+        { conf | attributes = conf.attributes ++ attributes }
 
 
 {-| By default the click handler for tabs has preventDefault true. If however you want the url hash
@@ -315,9 +315,9 @@ click on a tab item. This is handy if you use "real"" paths for your SPA pages b
 tab item.
 -}
 useHash : Bool -> Config msg -> Config msg
-useHash use (Config config) =
+useHash use (Config conf) =
     Config
-        { config | useHash = use }
+        { conf | useHash = use }
 
 
 {-| Creates a tab control which keeps track of the selected tab item and displays the corresponding tab pane for you
@@ -340,41 +340,41 @@ useHash use (Config config) =
         |> Tab.view model.tabState
 -}
 view : State -> Config msg -> Html.Html msg
-view state ((Config { items }) as config) =
-    case (getActiveItem state config) of
+view state ((Config c) as ca) =
+    case (getActiveItem state ca) of
         Nothing ->
             Html.div []
-                [ Html.ul (tabAttributes config) []
+                [ Html.ul (tabAttributes ca) []
                 , Html.div [ class "tab-content" ] []
                 ]
 
         Just (Item currentItem) ->
             Html.div []
                 [ Html.ul
-                    (tabAttributes config)
+                    (tabAttributes ca)
                     (List.map
-                        (\(Item { id, link }) -> renderLink id (id == currentItem.id) link config)
-                        items
+                        (\(Item i) -> renderLink i.id (i.id == currentItem.id) i.link ca)
+                        c.items
                     )
                 , Html.div
                     [ class "tab-content" ]
                     (List.map
-                        (\(Item { id, pane }) ->
-                            renderTabPane id (id == currentItem.id) pane state config
+                        (\(Item i) ->
+                            renderTabPane i.id (i.id == currentItem.id) i.pane state ca
                         )
-                        items
+                        c.items
                     )
                 ]
 
 
 getActiveItem : State -> Config msg -> Maybe (Item msg)
-getActiveItem (State { activeTab }) (Config { items }) =
+getActiveItem (State { activeTab }) (Config i) =
     case activeTab of
         Nothing ->
-            List.head items
+            List.head i.items
 
         Just id ->
-            List.filter (\(Item item) -> item.id == id) items
+            List.filter (\(Item it) -> it.id == id) i.items
                 |> List.head
                 |> (\found ->
                         case found of
@@ -382,7 +382,7 @@ getActiveItem (State { activeTab }) (Config { items }) =
                                 Just f
 
                             Nothing ->
-                                List.head items
+                                List.head i.items
                    )
 
 
@@ -392,7 +392,7 @@ renderLink :
     -> Link msg
     -> Config msg
     -> Html.Html msg
-renderLink id active (Link { attributes, children }) (Config { toMsg, withAnimation, useHash }) =
+renderLink id active (Link { attributes, children }) (Config c) =
     Html.li
         [ class "nav-item" ]
         [ Html.a
@@ -401,18 +401,17 @@ renderLink id active (Link { attributes, children }) (Config { toMsg, withAnimat
                 , ( "active", active )
                 ]
              , href <| "#" ++ id
-             , onWithOptions
+             , preventDefaultOn
                 "click"
-                { stopPropagation = False
-                , preventDefault = active || not useHash
-                }
                <|
-                Json.succeed <|
-                    toMsg <|
-                        State
-                            { activeTab = Just id
-                            , visibility = visibilityTransition (withAnimation && not active) Hidden
-                            }
+                Json.map (\msg -> ( msg, active || not c.useHash ))
+                <|
+                 Json.succeed <|
+                     c.toMsg <|
+                         State
+                             { activeTab = Just id
+                             , visibility = visibilityTransition (c.withAnimation && not active) Hidden
+                             }
              ]
                 ++ attributes
             )
@@ -427,13 +426,13 @@ renderTabPane :
     -> State
     -> Config msg
     -> Html.Html msg
-renderTabPane id active (Pane { attributes, children }) state config =
+renderTabPane id active (Pane { attributes, children }) state conf =
     let
         displayAttrs =
             if active then
-                activeTabAttributes state config
+                activeTabAttributes state conf
             else
-                [ style [ ( "display", "none" ) ] ]
+                [ style "display" "none" ]
     in
         Html.div
             ([ Attributes.id id, class "tab-pane" ] ++ displayAttrs ++ attributes)
@@ -444,23 +443,24 @@ activeTabAttributes :
     State
     -> Config msg
     -> List (Html.Attribute msg)
-activeTabAttributes (State { visibility }) (Config { toMsg, withAnimation }) =
+activeTabAttributes (State { visibility }) _ =
     case visibility of
         Hidden ->
-            [ style [ ( "display", "none" ) ] ]
+            [ style "display" "none" ]
 
         Start ->
-            [ style [ ( "display", "block" ), ( "opacity", "0" ) ] ]
+            [ style "display" "block"
+            , style "opacity" "0"
+            ]
 
         Showing ->
-            [ style [ ( "display", "block" ) ]
-            , transitionStyle 1
-            ]
+            [ style "display" "block" ]
+            ++ transitionStyle 1
 
 
 visibilityTransition : Bool -> Visibility -> Visibility
-visibilityTransition withAnimation visibility =
-    case ( withAnimation, visibility ) of
+visibilityTransition withAnim visibility =
+    case ( withAnim, visibility ) of
         ( True, Hidden ) ->
             Start
 
@@ -472,32 +472,31 @@ visibilityTransition withAnimation visibility =
 
 
 transitionHandler : (State -> msg) -> State -> Bool -> Json.Decoder msg
-transitionHandler toMsg (State state) withAnimation =
+transitionHandler toMsg (State state) withAnim =
     Json.succeed <|
         toMsg <|
             State
-                { state | visibility = visibilityTransition withAnimation state.visibility }
+                { state | visibility = visibilityTransition withAnim state.visibility }
 
 
-transitionStyle : Int -> Html.Attribute msg
+transitionStyle : Int -> List (Html.Attribute msg)
 transitionStyle opacity =
-    style
-        [ ( "opacity", toString opacity )
-        , ( "-webkit-transition", "opacity 0.15s linear" )
-        , ( "-o-transition", "opacity 0.15s linear" )
-        , ( "transition", "opacity 0.15s linear" )
-        ]
+    [ style "opacity" (String.fromInt opacity)
+    , style "-webkit-transition" "opacity 0.15s linear"
+    , style "-o-transition" "opacity 0.15s linear"
+    , style "transition" "opacity 0.15s linear"
+    ]
 
 
 tabAttributes : Config msg -> List (Html.Attribute msg)
-tabAttributes (Config config) =
+tabAttributes (Config conf) =
     [ classList
         [ ( "nav", True )
-        , ( "nav-tabs", not config.isPill )
-        , ( "nav-pills", config.isPill )
+        , ( "nav-tabs", not conf.isPill )
+        , ( "nav-pills", conf.isPill )
         ]
     ]
-        ++ (case config.layout of
+        ++ (case conf.layout of
                 Just Justified ->
                     [ class "nav-justified" ]
 
@@ -513,17 +512,17 @@ tabAttributes (Config config) =
                 Nothing ->
                     []
            )
-        ++ config.attributes
+        ++ conf.attributes
 
 
 applyModifier : Option msg -> Options msg -> Options msg
 applyModifier option options =
     case option of
-        Attrs attrs ->
-            { options | attributes = options.attributes ++ attrs }
+        Attrs attributes ->
+            { options | attributes = options.attributes ++ attributes }
 
-        Layout layout ->
-            { options | layout = Just layout }
+        Layout l ->
+            { options | layout = Just l }
 
 
 {-| Create a composable tab item
@@ -538,11 +537,11 @@ item :
     , pane : Pane msg
     }
     -> Item msg
-item { id, link, pane } =
+item i =
     Item
-        { id = id
-        , link = link
-        , pane = pane
+        { id = i.id
+        , link = i.link
+        , pane = i.pane
         }
 
 

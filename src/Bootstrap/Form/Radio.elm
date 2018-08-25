@@ -165,15 +165,15 @@ createCustom options =
 
 
 addOption : Option msg -> Radio msg -> Radio msg
-addOption opt (Radio ({ options } as radio)) =
-    Radio { radio | options = opt :: options }
+addOption opt (Radio ({ options } as r)) =
+    Radio { r | options = opt :: options }
 
 
 view : Radio msg -> Html.Html msg
-view (Radio radio) =
+view (Radio r) =
     let
         opts =
-            List.foldl applyModifier defaultOptions radio.options
+            List.foldl applyModifier defaultOptions r.options
 
     in
         Html.div
@@ -199,7 +199,7 @@ view (Radio radio) =
                         Nothing ->
                             []
                 )
-                [ Html.text radio.label ]
+                [ Html.text r.label ]
             ]
 
 
@@ -221,8 +221,8 @@ checked isCheck =
 {-| Option to disable the radio
 -}
 disabled : Bool -> Option msg
-disabled disabled =
-    Disabled disabled
+disabled input =
+    Disabled input
 
 
 {-| Use this option to display radios inline.
@@ -238,15 +238,15 @@ A single radio doesn't make much sense, typically you would have several. To aut
 unselect one radio, when selecting another you need to have the same name for each radio in a group.
 -}
 name : String -> Option msg
-name name =
-    Name name
+name input =
+    Name input
 
 
 {-| Use this function to handle any Html.Attribute option you wish for your radio
 -}
 attrs : List (Html.Attribute msg) -> Option msg
-attrs attrs =
-    Attrs attrs
+attrs attributes =
+    Attrs attributes
 
 
 {-| Set the id for the radio. Will automatically set the for attribute for the label
@@ -301,8 +301,8 @@ applyModifier modifier options =
         Validation validation ->
             { options | validation = Just validation }
 
-        Attrs attrs ->
-            { options | attributes = options.attributes ++ attrs }
+        Attrs attributes ->
+            { options | attributes = options.attributes ++ attributes }
 
 
 toAttributes : Options msg -> List (Html.Attribute msg)

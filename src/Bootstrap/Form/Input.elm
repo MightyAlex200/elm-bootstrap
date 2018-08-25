@@ -240,36 +240,36 @@ large =
 {-| Options/shorthand for setting the id of an input
 -}
 id : String -> Option msg
-id id =
-    Id id
+id str =
+    Id str
 
 
 {-| Use this function to handle any Html.Attribute option you wish for your input
 -}
 attrs : List (Html.Attribute msg) -> Option msg
-attrs attrs =
-    Attrs attrs
+attrs attributes =
+    Attrs attributes
 
 
 {-| Shorthand for setting the value attribute of an input
 -}
 value : String -> Option msg
-value value =
-    Value value
+value val =
+    Value val
 
 
 {-| Shorthand for setting the defaultValue attribute of an input
 -}
 defaultValue : String -> Option msg
-defaultValue value =
-    DefaultValue value
+defaultValue val =
+    DefaultValue val
 
 
 {-| Shorthand for setting the placeholder attribute of an input
 -}
 placeholder : String -> Option msg
-placeholder value =
-    Placeholder value
+placeholder val =
+    Placeholder val
 
 
 {-| Shorthand for assigning an onInput handler for an input
@@ -282,14 +282,14 @@ onInput toMsg =
 {-| Shorthand for setting the disabled attribute of an input
 -}
 disabled : Bool -> Option msg
-disabled disabled =
-    Disabled disabled
+disabled bool =
+    Disabled bool
 
 {-| Shorthand for setting the readonly attribute of an input
 -}
 readonly : Bool -> Option msg
-readonly readonly =
-    Readonly readonly
+readonly bool =
+    Readonly bool
 
 
 
@@ -321,7 +321,7 @@ toAttributes modifiers =
             ++ ([ Maybe.map Attributes.id options.id
                 , Maybe.andThen sizeAttribute options.size
                 , Maybe.map Attributes.value options.value
-                , Maybe.map Attributes.defaultValue options.defaultValue
+                , Maybe.map Attributes.value options.defaultValue
                 , Maybe.map Attributes.placeholder options.placeholder
                 , Maybe.map Events.onInput options.onInput
                 , Maybe.map validationAttribute options.validation
@@ -353,8 +353,8 @@ applyModifier modifier options =
         Size size ->
             { options | size = Just size }
 
-        Id id ->
-            { options | id = Just id }
+        Id idMod ->
+            { options | id = Just idMod }
 
         Type tipe ->
             { options | tipe = tipe }
@@ -362,17 +362,17 @@ applyModifier modifier options =
         Disabled val ->
             { options | disabled = val }
 
-        Value value ->
-            { options | value = Just value }
+        Value valueMod ->
+            { options | value = Just valueMod }
 
-        DefaultValue value ->
-            { options | defaultValue = Just value }
+        DefaultValue valueMod ->
+            { options | defaultValue = Just valueMod }
 
-        Placeholder value ->
-            { options | placeholder = Just value }
+        Placeholder valueMod ->
+            { options | placeholder = Just valueMod }
 
-        OnInput onInput ->
-            { options | onInput = Just onInput }
+        OnInput onInputMod ->
+            { options | onInput = Just onInputMod }
 
         Validation validation ->
             { options | validation = Just validation }
@@ -381,8 +381,8 @@ applyModifier modifier options =
             { options | readonly = val }
 
 
-        Attrs attrs ->
-            { options | attributes = options.attributes ++ attrs }
+        Attrs attrsMod ->
+            { options | attributes = options.attributes ++ attrsMod }
 
 
 sizeAttribute : ScreenSize -> Maybe (Html.Attribute msg)

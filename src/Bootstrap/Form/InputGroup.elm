@@ -104,9 +104,9 @@ type Addon msg
 
 -}
 config : Input msg -> Config msg
-config input =
+config i =
     Config
-        { input = input
+        { input = i
         , predecessors = []
         , successors = []
         , size = Nothing
@@ -118,25 +118,25 @@ config input =
 a [´configuration`](#Config)
 -}
 view : Config msg -> Html.Html msg
-view (Config config) =
+view (Config c) =
     let
-        (Input input) =
-            config.input
+        (Input i) =
+            c.input
     in
         Html.div
             ([ Attributes.class "input-group" ]
-                ++ ([ Maybe.andThen sizeAttribute config.size ]
+                ++ ([ Maybe.andThen sizeAttribute c.size ]
                         |> List.filterMap identity
                    )
-                ++ config.attributes
+                ++ c.attributes
             )
             (List.map
                 (\(Addon e) -> Html.div [ Attributes.class "input-group-prepend" ] [ e ])
-                config.predecessors
-                ++ [ input ]
+                c.predecessors
+                ++ [ i ]
                 ++ List.map
                     (\(Addon e) -> Html.div [ Attributes.class "input-group-append" ] [ e ])
-                    config.successors
+                    c.successors
             )
 
 
@@ -150,9 +150,9 @@ predecessors :
     List (Addon msg)
     -> Config msg
     -> Config msg
-predecessors addons (Config config) =
+predecessors addons (Config c) =
     Config
-        { config | predecessors = addons }
+        { c | predecessors = addons }
 
 
 {-| Specify a list of add-ons to display after the input.
@@ -165,9 +165,9 @@ successors :
     List (Addon msg)
     -> Config msg
     -> Config msg
-successors addons (Config config) =
+successors addons (Config c) =
     Config
-        { config | successors = addons }
+        { c | successors = addons }
 
 
 {-| Create a simple span add-on. Great for simple texts or font icons
@@ -213,8 +213,8 @@ dropdown :
         , items : List (Dropdown.DropdownItem msg)
         }
     -> Addon msg
-dropdown state config =
-    Dropdown.dropdown state config
+dropdown state c =
+    Dropdown.dropdown state c
         |> Addon
 
 
@@ -232,8 +232,8 @@ splitDropdown :
         , items : List (Dropdown.DropdownItem msg)
         }
     -> Addon msg
-splitDropdown state config =
-    Dropdown.splitDropdown state config
+splitDropdown state c =
+    Dropdown.splitDropdown state c
         |> Addon
 
 
@@ -332,25 +332,25 @@ input inputFn options =
 {-| Make all controls in an input group large
 -}
 large : Config msg -> Config msg
-large (Config config) =
+large (Config c) =
     Config
-        { config | size = Just LG }
+        { c | size = Just LG }
 
 
 {-| Make all controls in an input group small
 -}
 small : Config msg -> Config msg
-small (Config config) =
+small (Config c) =
     Config
-        { config | size = Just SM }
+        { c | size = Just SM }
 
 
 {-| When you need to customize the input group container, use this function to provide customization attributes.
 -}
 attrs : List (Html.Attribute msg) -> Config msg -> Config msg
-attrs attributes (Config config) =
+attrs attributes (Config c) =
     Config
-        { config | attributes = attributes }
+        { c | attributes = attributes }
 
 
 sizeAttribute : ScreenSize -> Maybe (Html.Attribute msg)

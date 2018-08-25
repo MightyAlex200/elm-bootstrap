@@ -33,12 +33,13 @@ import Bootstrap.Grid.Row as Row
 import Bootstrap.Pagination as Pagination
 import Bootstrap.Pagination.Item as Item
 import Bootstrap.General.HAlign as HAlign
+import Browser
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
-        { init = init
+    Browser.element
+        { init = (\flags -> init)
         , update = update
         , view = view
         , subscriptions = subscriptions
@@ -238,7 +239,7 @@ popoverButton state msg =
 
 mainContent : Model -> Html Msg
 mainContent model =
-    div [ style [ ( "margin-top", "60px" ) ] ]
+    div [ style "margin-top" "60px" ]
         [ navbar model
         , simpleForm
         , gridForm
@@ -269,15 +270,15 @@ mainContent model =
                 |> Popover.view model.popoverStateRight
             ]
         , Grid.row
-            [ Row.centerXs, Row.attrs [ rowStyle ] ]
-            [Grid.col [Col.middleXs, Col.textAlign Text.alignXsCenter, Col.attrs [ colStyle ]]
+            [ Row.centerXs, Row.attrs rowStyle ]
+            [Grid.col [Col.middleXs, Col.textAlign Text.alignXsCenter, Col.attrs colStyle]
                 [span [] [ text "Hello P"]]
             ]
         , Grid.row
-            [ Row.bottomXs, Row.attrs [ rowStyle ] ]
+            [ Row.bottomXs, Row.attrs rowStyle ]
             [ Grid.col
                 [ Col.xs2
-                , Col.attrs [ colStyle ]
+                , Col.attrs colStyle
                 ]
                 [ span [ class "fa fa-car" ] []
                 , text " Col 1 Row 1"
@@ -289,13 +290,13 @@ mainContent model =
                 ]
             , Grid.col
                 [ Col.topXs
-                , Col.attrs [ colStyle ]
+                , Col.attrs colStyle
                 ]
                 []
             , Grid.col
                 [ Col.xs5
                 , Col.middleXs
-                , Col.attrs [ colStyle ]
+                , Col.attrs colStyle
                 ]
                 [ text "Col 3 Row 1"
                 , Fieldset.config
@@ -311,11 +312,11 @@ mainContent model =
                     |> Fieldset.view
                 ]
             , Grid.col
-                [ Col.attrs [ colStyle ] ]
+                [ Col.attrs colStyle ]
                 [ text "Col 4 Row 1" ]
             ]
         , Grid.row
-            [ Row.middleXs, Row.attrs [ rowStyle ] ]
+            [ Row.middleXs, Row.attrs rowStyle ]
             [ Grid.col
                 [ Col.xs5 ]
                 [ Button.linkButton
@@ -328,9 +329,9 @@ mainContent model =
                 ]
             ]
         , Grid.row
-            [ Row.topXs, Row.attrs [ rowStyle ] ]
+            [ Row.topXs, Row.attrs rowStyle ]
             [ Grid.col
-                [ Col.xs5, Col.attrs [ colStyle ] ]
+                [ Col.xs5, Col.attrs colStyle ]
                 [ Dropdown.dropdown
                     model.dropdownState
                     { options = [ Dropdown.alignMenuRight ]
@@ -356,7 +357,7 @@ mainContent model =
                     }
                 ]
             , Grid.col
-                [ Col.xs5, Col.attrs [ colStyle ] ]
+                [ Col.xs5, Col.attrs colStyle ]
                 [ Dropdown.splitDropdown
                     model.splitDropState
                     { options = [ Dropdown.dropUp, Dropdown.alignMenuRight ]
@@ -384,7 +385,7 @@ mainContent model =
                     }
                 ]
             , Grid.col
-                [ Col.attrs [ colStyle ] ]
+                [ Col.attrs colStyle ]
                 [ text model.dummy ]
             ]
         , accordion model
@@ -882,8 +883,8 @@ simplePaginationList model =
                 , nextItem = Just <| Pagination.ListItem [] [ text "Next" ]
                 , activeIdx = model.simplePaginationIdx
                 , data = [ 1, 2, 3, 4, 5 ] -- You'd typically generate this from your model somehow !
-                , itemFn = \idx _ -> Pagination.ListItem [] [ text <| toString (idx + 1) ]
-                , urlFn = \idx _ -> "#/pages/" ++ toString (idx + 1)
+                , itemFn = \idx _ -> Pagination.ListItem [] [ text <| String.fromInt (idx + 1) ]
+                , urlFn = \idx _ -> "#/pages/" ++ String.fromInt (idx + 1)
                 }
             |> Pagination.view
         ]
@@ -943,20 +944,18 @@ customPagination model =
             ]
 
 
-rowStyle : Attribute Msg
+rowStyle : List (Attribute Msg)
 rowStyle =
-    style
-        [ ( "min-height", "8rem" )
-        , ( "background-color", "rgba(255, 0, 0, 0.1)" )
-        , ( "border", "1 px solid black" )
+        [ style "min-height" "8rem"
+        , style "background-color" "rgba(255, 0, 0, 0.1)"
+        , style "border" "1 px solid black"
         ]
 
 
-colStyle : Attribute Msg
+colStyle : List (Attribute Msg)
 colStyle =
-    style
-        [ ( "padding-top", ".75rem" )
-        , ( "padding-bottom", ".75rem" )
-        , ( "background-color", "rgba(86, 61, 124, 0.15)" )
-        , ( "border", "1px solid rgba(86, 61, 124, 0.2)" )
+        [ style "padding-top" ".75rem"
+        , style "padding-bottom" ".75rem"
+        , style "background-color" "rgba(86, 61, 124, 0.15)"
+        , style "border" "1px solid rgba(86, 61, 124, 0.2)"
         ]

@@ -281,8 +281,8 @@ vertical =
 {-| When you need to customize the group element with standard Html.Attribute use this function to create it as a group option
 -}
 attrs : List (Html.Attribute msg) -> Option msg
-attrs attrs =
-    Attrs attrs
+attrs attributes =
+    Attrs attributes
 
 
 groupAttributes : Bool -> List (Option msg) -> List (Html.Attribute msg)
@@ -320,8 +320,8 @@ applyModifier modifier options =
         Vertical ->
             { options | vertical = True }
 
-        Attrs attrs ->
-            { options | attributes = options.attributes ++ attrs }
+        Attrs attributes ->
+            { options | attributes = options.attributes ++ attributes }
 
 
 defaultOptions : Options msg
