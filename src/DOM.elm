@@ -19,7 +19,7 @@ module DOM
         , target
         )
 
--- 0.19 Version of debois/elm
+-- 0.19 Version of debois/elm-dom
 -- TODO: Replace with updated version when that happens
 
 {-| You read values off the DOM by constructing a JSON decoder.
